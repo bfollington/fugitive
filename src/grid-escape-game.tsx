@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import gsap from "gsap";
+import AnimatedSprite from "./AnimatedSprite";
 
 const GridGame = () => {
   const GRID_SIZE = 12;
@@ -37,6 +39,7 @@ const GridGame = () => {
   );
   const [seed, setSeed] = useState("1234");
   const [gameOver, setGameOver] = useState(false);
+  const [isTeleporting, setIsTeleporting] = useState(false);
 
   const moveGuards = () => {
     if (isHidden) return;
@@ -238,8 +241,10 @@ const GridGame = () => {
       case "CAVE": {
         const exit = findCaveExit(x, y);
         if (exit) {
+          setIsTeleporting(true);
           setPlayerPos(exit);
           addLog(`🕳️ Teleported to cave at ${exit.x},${exit.y}!`);
+          setTimeout(() => setIsTeleporting(false), 200);
         }
         break;
       }
@@ -340,7 +345,7 @@ const GridGame = () => {
   };
 
   const shiftGridLeft = () => {
-    const shifter = (prev) => {
+    const shifter = (prev: string[][]) => {
       // Create a new grid with all columns shifted left
       const newGrid = prev.map((row) => {
         const shiftedRow = [...row.slice(1)];
@@ -405,7 +410,7 @@ const GridGame = () => {
 
   const findCaveExit = (x: number, y: number) => {
     // Find all cave positions except the current one
-    const cavePositions = [];
+    const cavePositions = [] as { x: number; y: number }[];
     grid.forEach((row, cy) => {
       row.forEach((cell, cx) => {
         if (cell === "CAVE" && (cx !== x || cy !== y)) {
@@ -452,36 +457,57 @@ const GridGame = () => {
   return (
     <div className="flex gap-4 p-4 bg-black min-h-screen text-white">
       <div className="flex flex-col gap-4">
-        <div
-          className="grid gap-px bg-gray-800"
-          style={{
-            gridTemplateColumns: `repeat(${GRID_SIZE}, ${CELL_SIZE}px)`,
-          }}
-        >
-          {grid.map((row, y) =>
-            row.map((cell, x) => {
-              const isGuard = guards.some((g) => g.x === x && g.y === y);
-              const isPlayer = playerPos.x === x && playerPos.y === y;
+        <div className="relative">
+          <div
+            className="grid gap-px bg-gray-800"
+            style={{
+              gridTemplateColumns: `repeat(${GRID_SIZE}, ${CELL_SIZE}px)`,
+            }}
+          >
+            {grid.map((row, y) =>
+              row.map((cell, x) => {
+                const isGuard = guards.some((g) => g.x === x && g.y === y);
+                const isPlayer = playerPos.x === x && playerPos.y === y;
 
-              return (
-                <div
-                  key={`${x}-${y}`}
-                  className="flex items-center justify-center bg-gray-900"
-                  style={{
-                    width: CELL_SIZE,
-                    height: CELL_SIZE,
-                    fontSize: "20px",
-                  }}
-                >
-                  {isPlayer
-                    ? TILES.PLAYER.emoji
-                    : isGuard
-                      ? TILES.GUARD.emoji
-                      : TILES[cell as keyof typeof TILES].emoji}
-                </div>
-              );
-            }),
-          )}
+                return (
+                  <div
+                    key={`${x}-${y}`}
+                    className="flex items-center justify-center bg-gray-900"
+                    style={{
+                      width: CELL_SIZE,
+                      height: CELL_SIZE,
+                    }}
+                  >
+                    {/* Only render static tiles */}
+                    {!isPlayer &&
+                      !isGuard &&
+                      TILES[cell as keyof typeof TILES].emoji}
+                  </div>
+                );
+              }),
+            )}
+          </div>
+
+          {/* Animated Sprites Overlay */}
+          <div className="absolute top-0 left-0 pointer-events-none">
+            <AnimatedSprite
+              emoji={TILES.PLAYER.emoji}
+              gridPos={playerPos}
+              cellSize={CELL_SIZE}
+              className={isHidden ? "opacity-50" : ""}
+              teleporting={isTeleporting}
+            />
+
+            {guards.map((guard, index) => (
+              <AnimatedSprite
+                key={`guard-${index}`}
+                emoji={TILES.GUARD.emoji}
+                gridPos={guard}
+                cellSize={CELL_SIZE}
+                className="transition-opacity duration-200"
+              />
+            ))}
+          </div>
         </div>
 
         <div className="grid grid-cols-3 w-32 gap-2">
