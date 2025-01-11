@@ -7,6 +7,7 @@ interface AnimatedSpriteProps {
   gridPos: { x: number; y: number };
   cellSize: number;
   className?: string;
+  teleporting?: boolean;
 }
 
 const AnimatedSprite: React.FC<AnimatedSpriteProps> = ({

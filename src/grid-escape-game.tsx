@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import gsap from "gsap";
 import AnimatedSprite from "./AnimatedSprite";
 
 const GridGame = () => {
@@ -45,7 +44,7 @@ const GridGame = () => {
     if (isHidden) return;
 
     setGuards((prevGuards) => {
-      let newGuards = prevGuards
+      const newGuards = prevGuards
         .map((guard) => {
           const dy = Math.sign(playerPos.y - guard.y);
           const newX = guard.x + 1;
@@ -194,7 +193,7 @@ const GridGame = () => {
   }, [handleKeyPress]);
 
   useEffect(() => {
-    initializeGrid(seed);
+    initializeGrid();
   }, []);
 
   const checkWolfAttack = (pos: { x: number; y: number }) => {
@@ -426,7 +425,7 @@ const GridGame = () => {
     return cavePositions[Math.floor(Math.random() * cavePositions.length)];
   };
 
-  const initializeGrid = (_newSeed: string) => {
+  const initializeGrid = () => {
     const newGrid = Array(GRID_SIZE)
       .fill(null)
       .map(() =>
@@ -589,7 +588,7 @@ const GridGame = () => {
             />
             <button
               onClick={() => {
-                initializeGrid(seed);
+                initializeGrid();
                 setGameOver(false);
                 setPlayerPos({
                   x: Math.floor(GRID_SIZE / 2),
